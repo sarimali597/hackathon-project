@@ -1,133 +1,136 @@
 let candidates = [];
 let votes = {};
+let voterAudit = [];
+let usedIds = [];
+
 const cnicRegex = /^[0-9]{5}-[0-9]{7}-[0-9]{1}$/;
 
-// Elements
-const cnicInput = document.getElementById("voterCnic");
-const ageInput = document.getElementById("voterAge");
-const cnicMsg = document.getElementById("cnicMsg");
-
-// Validate CNIC Format while typing
-cnicInput.addEventListener("input", function() {
-    if(cnicRegex.test(cnicInput.value)) {
-        cnicMsg.innerText = "Format Valid ✓";
-        cnicMsg.className = "cnic-hint valid-hint";
-    } else {
-        cnicMsg.innerText = "Invalid Format! (XXXXX-XXXXXXX-X)";
-        cnicMsg.className = "cnic-hint invalid-hint";
-    }
-});
-
-// Add Candidate Logic
-document.getElementById("addBtn").addEventListener("click", function() {
+document.getElementById("addBtn").onclick = () => {
     let name = document.getElementById("candInput").value;
-    if(name.trim() !== "") {
+    if (name.trim()) {
         candidates.push(name);
         votes[name] = 0;
-        let list = document.getElementById("setupList");
         let div = document.createElement("div");
-        div.className = "candidate-item animate__animated animate__fadeInLeft";
-        div.innerHTML = `<span><i class="fas fa-user-tag"></i> ${name}</span>`;
-        list.appendChild(div);
+        div.className = "candidate-item animate__animated animate__fadeIn";
+        div.innerHTML = `<span><i class="fas fa-user"></i> ${name}</span>`;
+        document.getElementById("setupList").appendChild(div);
         document.getElementById("candInput").value = "";
     }
-});
+};
 
-// Start Election Logic
-document.getElementById("startBtn").addEventListener("click", function() {
-    if(candidates.length < 2) {
-        alert("Please add at least 2 candidates.");
-        return;
-    }
+document.getElementById("startBtn").onclick = () => {
+    if (candidates.length < 2) return alert("Please add at least 2 candidates.");
+
+    document.getElementById("ageInputArea").style.display = document.getElementById("ageToggle").checked ? "block" : "none";
+    let mode = document.getElementById("votingMode").value;
+    document.getElementById("nameInputArea").style.display = (mode === 'name' || mode === 'both') ? "block" : "none";
+    document.getElementById("cnicInputArea").style.display = (mode === 'cnic' || mode === 'both') ? "block" : "none";
+
     document.getElementById("setup-screen").style.display = "none";
     document.getElementById("verify-screen").style.display = "block";
-    updateLeaderboard();
-});
+    document.getElementById("admin-controls").style.display = "block";
+};
 
-// Verify Voter Logic
-document.getElementById("verifyBtn").addEventListener("click", function() {
-    let ageVal = ageInput.value;
-    let cnicVal = cnicInput.value;
+document.getElementById("verifyBtn").onclick = () => {
+    const age = document.getElementById("voterAge").value;
+    const name = document.getElementById("voterName").value;
+    const cnic = document.getElementById("voterCnic").value;
+    const mode = document.getElementById("votingMode").value;
+    const isAgeOn = document.getElementById("ageToggle").checked;
 
-    if(ageVal === "" || ageVal === null) {
-        alert("Age field is empty! It is required to proceed.");
-        ageInput.focus();
-        return;
+    let voterId = "";
+
+    if (mode === 'both') {
+        if (!name || !cnicRegex.test(cnic)) return alert("Name & Valid CNIC required.");
+        voterId = cnic;
+    } else if (mode === 'cnic') {
+        if (!cnicRegex.test(cnic)) return alert("Valid CNIC required.");
+        voterId = cnic;
+    } else {
+        if (!name) return alert("Voter Name required.");
+        voterId = name.toLowerCase().trim();
     }
 
-    if(!cnicRegex.test(cnicVal)) {
-        alert("CNIC format is incorrect or missing.");
-        return;
-    }
-
-    if(ageVal < 18) {
-        alert("Voter must be 18 years or older.");
-        return;
-    }
+    if (usedIds.includes(voterId)) return alert("Access Denied: Already Voted.");
+    if (isAgeOn && (age === "" || age < 18)) return alert("Invalid Age: Must be 18+.");
 
     document.getElementById("verify-screen").style.display = "none";
     document.getElementById("vote-screen").style.display = "block";
-    renderOptions();
-});
+    document.getElementById("admin-controls").style.display = "none";
+    renderBallot(voterId);
+};
 
-function renderOptions() {
-    let box = document.getElementById("votingOptions");
-    box.innerHTML = "";
+function renderBallot(voterId) {
+    const container = document.getElementById("votingOptions");
+    container.innerHTML = "";
     candidates.forEach(name => {
-        let b = document.createElement("button");
-        b.className = "candidate-item animate__animated animate__fadeInUp";
-        b.style.width = "100%";
-        b.innerHTML = `<span>${name}</span> <i class="fas fa-vote-yea"></i>`;
-        b.onclick = () => {
+        let btn = document.createElement("button");
+        btn.className = "candidate-item";
+        btn.innerHTML = `<span>${name}</span> <i class="fas fa-check"></i>`;
+        btn.onclick = () => {
             votes[name]++;
-            alert("Vote recorded for " + name);
-            resetForNext();
+            usedIds.push(voterId);
+            voterAudit.push({ id: voterId, choice: name });
+            alert("Vote Recorded for " + name);
+            returnToVerify();
         };
-        box.appendChild(b);
+        container.appendChild(btn);
     });
 }
 
-function resetForNext() {
-    ageInput.value = "";
-    cnicInput.value = "";
-    cnicMsg.innerText = "Must match Pakistani CNIC format";
-    cnicMsg.className = "cnic-hint";
+function returnToVerify() {
+    document.getElementById("voterAge").value = "";
+    document.getElementById("voterName").value = "";
+    document.getElementById("voterCnic").value = "";
     document.getElementById("vote-screen").style.display = "none";
     document.getElementById("verify-screen").style.display = "block";
-    updateLeaderboard();
+    document.getElementById("admin-controls").style.display = "block";
 }
 
-function updateLeaderboard() {
-    let board = document.getElementById("liveLeaderboard");
-    board.innerHTML = "";
-    let max = Math.max(...Object.values(votes));
-    candidates.forEach(name => {
-        let div = document.createElement("div");
-        div.style.display = "flex";
-        div.style.justifyContent = "space-between";
-        div.style.padding = "5px 0";
-        div.style.fontSize = "13px";
-        let isLead = votes[name] === max && max > 0;
-        div.innerHTML = `<span>${name} ${isLead ? '<span class="leader-badge">LEADER</span>' : ''}</span> <span>${votes[name]}</span>`;
-        board.appendChild(div);
+document.getElementById("finalizeBtn").onclick = () => {
+    if (!confirm("End election and show results?")) return;
+
+    document.getElementById("verify-screen").style.display = "none";
+    document.getElementById("admin-controls").style.display = "none";
+    document.getElementById("result-screen").style.display = "block";
+
+    const list = document.getElementById("finalList");
+    const tieMsg = document.getElementById("tieMessage");
+    const resTitle = document.getElementById("resultTitle");
+    list.innerHTML = "";
+
+    let maxVotes = Math.max(...Object.values(votes));
+    let winners = candidates.filter(name => votes[name] === maxVotes && maxVotes > 0);
+
+    // TIE HANDLING
+    if (winners.length > 1) {
+        tieMsg.style.display = "block";
+        resTitle.innerHTML = `<span class="head-blue">ELECTION</span> <span style="color:#ef4444;">TIED</span>`;
+    } else if (winners.length === 1) {
+        tieMsg.style.display = "none";
+        resTitle.innerHTML = `<span class="head-blue">WINNER</span> <span class="head-teal">DECLARED</span>`;
+    }
+
+    candidates.forEach(c => {
+        let isWinner = (votes[c] === maxVotes && maxVotes > 0);
+        let crown = isWinner ? `<i class="fas fa-crown winner-badge-icon"></i>` : "";
+        let winnerClass = isWinner ? "winner-highlight" : "";
+
+        list.innerHTML += `
+            <div class="candidate-item ${winnerClass}">
+                <span>${c} ${crown}</span> 
+                <strong>${votes[c]} Votes</strong>
+            </div>`;
     });
-}
 
-document.getElementById("finalizeBtn").addEventListener("click", function() {
-    if(confirm("End election and show final results?")) {
-        document.getElementById("verify-screen").style.display = "none";
-        document.getElementById("result-screen").style.display = "block";
-        let fList = document.getElementById("finalList");
-        fList.innerHTML = "";
-        candidates.forEach(name => {
-            let d = document.createElement("div");
-            d.className = "candidate-item";
-            d.innerHTML = `<span>${name}</span> <strong>${votes[name]} Votes</strong>`;
-            fList.appendChild(d);
+    if (document.getElementById("privacyToggle").checked) {
+        document.getElementById("auditLogArea").style.display = "block";
+        const log = document.getElementById("auditLog");
+        log.innerHTML = "";
+        voterAudit.forEach(a => {
+            log.innerHTML += `<div class="audit-row"><span>ID: ${a.id}</span> <span>Choice: ${a.choice}</span></div>`;
         });
     }
-});
+};
 
-document.getElementById("resetBtn").addEventListener("click", function() {
-    location.reload();
-});
+document.getElementById("resetBtn").onclick = () => location.reload();
