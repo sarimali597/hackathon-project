@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Election Portal</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <link rel="icon" type="image/svg+xml" href="images/ballot-box.png">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="styles/style.css">
+</head>
+<body>
+
+    <header>
+        <h1>
+            <span class="head-blue">NADRA</span> 
+            <span class="head-teal">VERIFIED</span> 
+            <span class="head-blue">VOTE</span>
+        </h1>
+    </header>
+
+    <div class="main-card animate__animated animate__zoomIn">
+        
+        <div id="setup-screen" style="display: block;">
+            <div class="title-area">
+                <i class="fas fa-users-cog"></i>
+                <h2>
+                    <span class="head-blue">ELECTION</span> 
+                    <span class="head-teal">PANEL</span>
+                </h2>
+            </div>
+            <div class="input-box">
+                <label>Opponent Name</label>
+                <input type="text" id="candInput" placeholder="Enter name...">
+                <button class="teal-btn" id="addBtn">Add Candidate</button>
+            </div>
+            <div id="setupList"></div>
+            <button class="blue-btn" id="startBtn">Start Voting Session</button>
+        </div>
+
+        <div id="verify-screen">
+            <div class="title-area">
+                <i class="fas fa-id-card"></i>
+                <h2>
+                    <span class="head-blue">VOTER</span> 
+                    <span class="head-teal">CHECK</span>
+                </h2>
+            </div>
+            <div class="input-box">
+                <label>CNIC (45504-9531423-3)</label>
+                <input type="text" id="voterCnic" placeholder="XXXXX-XXXXXXX-X">
+                <p id="cnicMsg" class="cnic-hint">Must match Pakistani CNIC format</p>
+            </div>
+            <div class="input-box">
+                <label>Enter Age</label>
+                <input type="number" id="voterAge" placeholder="18+ required">
+            </div>
+            <button class="blue-btn" id="verifyBtn">Verify Identity</button>
+            
+            <div class="leaderboard-box">
+                <h4 style="color:#14B8A6; font-size:14px; margin-bottom:8px;">Live Results</h4>
+                <div id="liveLeaderboard"></div>
+            </div>
+            <button class="red-btn" id="finalizeBtn">Admin: Finalize Election</button>
+        </div>
+
+        <div id="vote-screen">
+            <div class="title-area">
+                <i class="fas fa-box-tissue"></i>
+                <h2>
+                    <span class="head-blue">BALLOT</span> 
+                    <span class="head-teal">PAPER</span>
+                </h2>
+            </div>
+            <div id="votingOptions"></div>
+        </div>
+
+        <div id="result-screen">
+            <div class="title-area">
+                <i class="fas fa-trophy" style="color:#FFD700;"></i>
+                <h2>
+                    <span class="head-blue">WINNER</span> 
+                    <span class="head-teal">ANNOUNCED</span>
+                </h2>
+            </div>
+            <div id="finalList"></div>
+            <button class="blue-btn" id="resetBtn">Reset System</button>
+        </div>
+
+    </div>
+
+    <footer>
+        <p>Built by <strong>Sarim Ali</strong> | <span class="head-teal">Digital Democracy</span></p>
+    </footer>
+
+    <script src="scripts/script.js"></script>
+</body>
+</html>
